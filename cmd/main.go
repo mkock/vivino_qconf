@@ -8,9 +8,11 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
+
+	"github.com/mkock/vivino_quickconf/qconf"
 
 	"github.com/BurntSushi/toml"
-	"github.com/mkock/vivino_quickconf/qconf"
 )
 
 var (
@@ -20,7 +22,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&confName, "conf", "qconf.toml", "name of TOML config file to load, relative to binary's directory")
+	flag.StringVar(&confName, "conf", "qconf.toml", "name of TOML config file to load, relative to current directory, or alternatively, in ~/.config/qconf/")
 	flag.StringVar(&project, "project", "", "name of project to edit (use names from config file)")
 	flag.StringVar(&push, "push", "", "name of file to push config file to")
 	flag.StringVar(&pull, "pull", "", "name of file to pull config file into")
@@ -34,9 +36,28 @@ func main() {
 		printAndExit(errors.New(`argument "project" is required`))
 	}
 
-	rawConf, err := readFile(confName)
-	if err != nil {
+	_, err := os.Stat(confName)
+	found := !os.IsNotExist(err)
+	if err != nil && found {
 		printAndExit(fmt.Errorf("config: %w", err))
+	}
+
+	var rawConf string
+	if found {
+		rawConf, err = readFile(confName)
+		if err != nil {
+			printAndExit(fmt.Errorf("config: %w", err))
+		}
+	} else {
+		// Plan B: Attempt to locate the file in ~/.config/qconf/.
+		home, err := os.UserHomeDir()
+		if err != nil {
+			printAndExit(fmt.Errorf("locate home dir: %w", err))
+		}
+		rawConf, err = readFile(path.Join(home, ".config", "qconf", confName))
+		if err != nil {
+			printAndExit(fmt.Errorf("config: %w", err))
+		}
 	}
 
 	ed := os.Getenv("EDITOR")

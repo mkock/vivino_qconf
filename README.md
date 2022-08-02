@@ -55,5 +55,6 @@ If your TOML file is not called qconf.toml, or if it's located elsewhere on your
 
 `qconf -conf=path/to/qconf.toml ...`
 
-The qconf.toml file is *not* included with this source code! The reasons should be obvious. Please request this file via secure means from a Vivino colleague.
+Alternatively, you can put it in `~/.config/qconf/qconf.toml`, and it will be automatically detected.
 
+The qconf.toml file is *not* included with this source code! The reasons should be obvious. Please request this file via secure means from a Vivino colleague.
